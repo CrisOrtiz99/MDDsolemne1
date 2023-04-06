@@ -1,0 +1,27 @@
+#generamos una consulta para Esta vs NumAcci 
+query = """
+select state_name,
+  count(*) as number_of_fatalities,
+from `bigquery-public-data.nhtsa_traffic_fatalities.accident_2015`
+group by state_name
+ORDER BY number_of_fatalities DESC;
+ """
+query_job = client.query(query)
+iterator = query_job.result(timeout=30)
+rows = list(iterator)
+
+#transformar a data frame
+headlines = pd.DataFrame(data=[list(x.values()) for x in rows], columns=list(rows[0].keys()))
+
+#codigo para obeservar el dataframe los 10 primeros, obtendremos la tabla 
+headlines.head(51)
+
+#Grafico Estado Vs Numero de Accidentes 
+plt.figure(figsize=(12, 6))
+plt.bar(headlines['state_name'], headlines['number_of_fatalities'])
+plt.xlabel('Estados', fontsize=12)
+plt.ylabel('Numero de Accidentes',fontsize=12)
+plt.title('Numero de Accidentes por Estado',fontsize=14)
+plt.xticks(rotation=90, ha='right', fontsize=10)  # Rotar las etiquetas del eje x para mayor legibilidad
+plt.yticks(fontsize=10)
+plt.show()
