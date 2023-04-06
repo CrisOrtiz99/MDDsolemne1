@@ -1,0 +1,28 @@
+#generamos una consulta para Carretera vs Num Acci
+query3 = """
+SELECT trafficway_identifier, 
+COUNT(*) as number_of_fatalities
+FROM `bigquery-public-data.nhtsa_traffic_fatalities.accident_2015`
+GROUP BY trafficway_identifier
+HAVING COUNT(*) != 1
+ORDER BY number_of_fatalities DESC;
+
+ """
+query3_job = client.query(query3)
+iterator3 = query3_job.result(timeout=30)
+rows3 = list(iterator3)
+
+#transformamos los datos  aun dataframe 
+headlines3 = pd.DataFrame(data=[list(x.values()) for x in rows3], columns=list(rows3[0].keys()))
+#se dejara hasta el cifra 16 ya que muchos datos se parecen y tome la desicion de dejar los mas importantes sobre 80 accidentes 
+headlines3.head(17)
+
+#Grafico ID Trafico Vs Numero de Accidentes 
+plt.figure(figsize=(12, 6))
+plt.bar(headlines3['trafficway_identifier'][:17], headlines3['number_of_fatalities'][:17])
+plt.xlabel('ID de Trafico', fontsize=12)
+plt.ylabel('Numero de Accidentes',fontsize=12)
+plt.title('Numero de Accidentes por ID de Trafico',fontsize=14)
+plt.xticks(rotation=45, ha='right', fontsize=10)  # Rotar las etiquetas del eje x para mayor legibilidad
+plt.yticks(fontsize=10)
+plt.show()
