@@ -1,0 +1,45 @@
+#Consulta para obtener los Estados, Numero de Accidentes, Dato de los conductores ebrios
+query5 = """SELECT state_name, number_of_drunk_drivers, number_of_fatalities,
+       FROM `bigquery-public-data.nhtsa_traffic_fatalities.accident_2015`
+"""
+query5_job = client.query(query5)
+iterator5 = query5_job.result(timeout=30)
+rows5 = list(iterator5)
+headlines5 = pd.DataFrame(data=[list(x.values()) for x in rows5], columns=list(rows5[0].keys()))
+headlines5.head(10)
+
+#contamos los accidentes totales
+df_count_total = df['state_name'].value_counts().reset_index().rename(columns={"index": "state_name", "count": "total_accident"})
+#entrelazamos la info de df con count_total para poder contar posterior mente drunk_drivers
+df_inter = df[df.state_name.isin(df_count_total.state_name)].rename(columns={"count":"total_accident"})
+#despues de enlazar los datos contado de df-count_total contamos drunk_drivers
+df_drunk_drivers = df_inter.groupby('state_name')['number_of_drunk_drivers'].sum().reset_index().rename(columns={"number_of_drunk_drivers": "total_drunk_drivers"})
+#combinar el recuento de accidentes y el recuento de conductores ebrios por estado
+df_count_total = pd.merge(df_count_total, df_drunk_drivers, on='state_name')
+df_count_cut = df_count_total.nlargest(16, 'total_accident')
+df_count_cut.head(16)
+
+#ploteo
+fig, ax = plt.subplots(figsize=(10,8))
+bar_width = 0.35
+
+# primer barras
+ax.bar(df_count_cut['state_name'], df_count_cut['total_accident'], width=bar_width, color='#ADD8E6', label='Total Accidentes')
+
+# segundo barras
+ax.bar(df_count_cut['state_name'], df_count_cut['total_drunk_drivers'], width=bar_width, color='#FFC0CB', label='Conductores Ebrios', bottom=df_count_cut['total_accident'])
+#creamos un listado para generar los porcentajes
+L=[]
+for e, r in zip(df_count_cut['total_accident'] ,df_count_cut['total_drunk_drivers']):
+       x=r/e
+       L.append(x)
+for i in range(len(df_count_cut)):
+    ax.text(i, df_count_cut['total_drunk_drivers'][i] + df_count_cut['total_accident'][i], f"{round(L[i]*100, 2)}%", ha='center', fontsize=8, color='black')
+    ax.text(i, df_count_cut['total_accident'][i] + 10, df_count_cut['total_accident'][i], ha='center', fontsize=8)
+
+ax.set_xlabel('Estado', fontsize= 15)
+plt.xticks(rotation=90, ha='right', fontsize=10)
+ax.set_ylabel('Número de Accidentes')
+ax.set_title('Relacion accidentes totales con conductores ebrios por Estado')
+ax.legend()
+plt.show()
