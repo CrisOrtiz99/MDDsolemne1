@@ -1,0 +1,21 @@
+#df_count crea un nuevo data frame que cuenta los accidentes por estado totales, a partir de df y la cuenta es occurence
+df_count = df['state_name'].value_counts().reset_index().rename(columns={"index": "state_name", "state_name": "Occurence"})
+#interme a partir del anterior hace otro dataframe que contiene los 15 mas altos
+df_interme = df_count.nlargest(16, 'count') 
+#d_uni con .isin toma de df los accidentes que solo coinciden con los estados que estan con h15
+df_uni = df[df.state_name.isin(df_interme.Occurence)]
+#count_month toma el datafre que creo y los agrupa por estado y mes de accidente con comando gruopby
+df_count_month = df_uni.groupby(['state_name', 'month_of_crash']).size().reset_index(name='Occurence')
+#generamos una lista para cambiar el nombre de los meses 
+month = {1: 'Enero', 2: 'Febrero', 3: 'Marzo', 4: 'Abril', 5: 'Mayo', 6: 'Junio', 7: 'Julio', 8: 'Augosto', 9: 'Septiembre', 10: 'Octubre', 11: 'Noviembre', 12: 'Diciembre'}
+df_count_month['month_of_crash'] = df_count_month['month_of_crash'].map(month)
+df_count_month
+
+#ploteo del grafico 
+plt.figure(figsize=(11,10))
+plt.title('Número de accidentes por mes y estado', fontsize=16)
+sns.pointplot(x='month_of_crash', y='Occurence', hue='state_name', data=df_count_month, palette='muted')
+plt.xlabel('Mes',fontsize=14)
+plt.xticks(rotation=90, ha='right', fontsize=10)
+plt.ylabel('Número de accidentes', fontsize=14)
+plt.legend(bbox_to_anchor=(1, 1), loc=0)
