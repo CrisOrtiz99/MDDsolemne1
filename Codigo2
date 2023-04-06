@@ -1,0 +1,7 @@
+# Obtener información del DataFrame original para saber que tipo de informacion se esta trabajando
+columns = df.columns.tolist()
+dtypes = df.dtypes.tolist()
+example_data = df.iloc[0].tolist()
+
+# Crear un nuevo DataFrame con la información obtenida
+info_df = pd.DataFrame({'Columna': columns, 'Tipo de Dato': dtypes, 'Ejemplo de Dato': example_data})
