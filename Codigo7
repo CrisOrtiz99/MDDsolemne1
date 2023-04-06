@@ -1,0 +1,30 @@
+#query para la pregunta 4 buscamos las hora 
+query4 = """
+select state_name,number_of_fatalities,timestamp_of_crash, 
+from `bigquery-public-data.nhtsa_traffic_fatalities.accident_2015`
+ """
+
+query4_job = client.query(query4)
+iterator4 = query4_job.result(timeout=30)
+rows4 = list(iterator4)
+
+headlines4 = pd.DataFrame(data=[list(x.values()) for x in rows4], columns=list(rows4[0].keys()))
+
+headlines4['hour_of_crash'] = pd.to_datetime(headlines4['timestamp_of_crash']).dt.floor('H').dt.strftime('%Y-%m-%d %H:%M:%S').str.split(' ').str[1].str.split(':').str[0].astype(int)
+#Generamos un data Frame que contenga los 15 Estados ordenados por mayor numero de accidentes 
+states_orde = headlines['state_name'][:15]
+
+#Filtrar el dataframe por los estados seleccionados
+filtered_headlines4 = headlines4[headlines4['state_name'].isin(states_orde)]
+
+#Agrupar por hora de accidente, nombre del estado y contar el número de accidentes
+grouped_data = filtered_headlines4.groupby(['hour_of_crash', 'state_name']).count().reset_index()
+
+#plot
+plt.figure(figsize=(11, 10))
+plt.title('Número de accidentes por hora y estado', fontsize=16)
+sns.pointplot(x='hour_of_crash', y='number_of_fatalities', hue='state_name', data=grouped_data, palette='muted')
+plt.xlabel('Hora', fontsize=14)
+plt.ylabel('Número de accidentes', fontsize=14)
+plt.legend(bbox_to_anchor=(1, 1), loc=0)
+plt.show()
