@@ -1,0 +1,25 @@
+#paquetes del programa
+import csv
+import pandas as pd  
+import seaborn as sns
+import matplotlib.pyplot as plt
+import numpy as np
+import os 
+#enlazar google cloud y activar el cliente
+os.environ["GCLOUD_PROJECT"]="mdd-382503"
+from google.cloud import bigquery
+client = bigquery.Client()
+
+#inicio de programa 
+#primera funcion generacion dataset
+dataset_ref = client.dataset("nhtsa_traffic_fatalities", project="bigquery-public-data")
+dataset = client.get_dataset(dataset_ref)
+tabla_ref= dataset_ref.table('accident_2015')
+tabla= client.get_table(tabla_ref)
+
+#generacion de diccionario 
+df = client.list_rows(tabla_ref, max_results=None).to_dataframe()
+#selecciona solo los nombres
+col_names = df.columns.tolist()
+dic_names = {name: None for name in col_names}
+pd.DataFrame(dic_names.items()).to_csv("dic_names.csv", header=False, index=False)
